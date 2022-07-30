@@ -59,6 +59,7 @@
 
     --------------------------->
 
+<link rel="alternate" href="/atom.xml" title="不系之舟" type="application/atom+xml">
 </head>
 
 
@@ -144,10 +145,10 @@
         <!-- Post Main Content -->
         <div class="entry-content">
           <a id="more"></a>
-<p><img src="/images/computer.jpg" alt="picture"><br>使用ssh命令提供的跳板功能，假设存在3台服务器S1、S2、S3，S1与S2可以互通，S2与S3可以互通，由于网络隔离S1与S3不能互通，此时可以在S1上将S2作为跳板登陆S3,命令为：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh -J S2 S3</span><br></pre></td></tr></table></figure></p>
+<p><img src="/images/computer.jpg" alt=""><br>使用ssh命令提供的跳板功能，假设存在3台服务器S1、S2、S3，S1与S2可以互通，S2与S3可以互通，由于网络隔离S1与S3不能互通，此时可以在S1上将S2作为跳板登陆S3,命令为：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh -J S2 S3</span><br></pre></td></tr></table></figure></p>
 <p>假设在S1上登陆S2、S3需要指定特定的用户名端口私钥，在上述命令中S2的私钥无法指定，可以通过修改config文件来指定或者使用<code>-J</code>参数的展开形式：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh  -o ProxyCommand=<span class="string">"ssh -i id_rsa2 -W %h:%p -p 22 jump@S2"</span> S3 -p 22 -i id_rsa3</span><br></pre></td></tr></table></figure></p>
 <p>  假设S3不是一台服务器而是一个虚拟机集群，内部包含了虚拟机S31、S32、S33、S34、S35等若干台虚拟机，S2作为专用跳板供外部机器连接虚拟机。在S2上新建专用用户<code>jump</code>，设置该用户通过密钥登录并且将默认shell改为<code>nologin</code>以阻止常规登录，只允许作为跳板。</p>
-<p>  将上述命令封装为一脚本文件<code>sshb</code>，内容如下：<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">!/bin/bash</span></span><br><span class="line">(cat &lt;&lt;EOF</span><br><span class="line">-----BEGIN RSA PRIVATE KEY-----</span><br><span class="line">**跳板机上用户jump的私钥，该私钥公开使用**</span><br><span class="line">-----END RSA PRIVATE KEY-----</span><br><span class="line">EOF</span><br><span class="line">) &gt; /tmp/jump_rsa</span><br><span class="line">chmod 600 /tmp/jump_rsa</span><br><span class="line">ssh -o "StrictHostKeyChecking no" -o ProxyCommand="ssh -o 'StrictHostKeyChecking no' -i /tmp/jump_rsa -W %h:%p -p 22 jump@10.0.4.105" $*</span><br><span class="line">rm /tmp/jump_rsa</span><br></pre></td></tr></table></figure></p>
+<p>  将上述命令封装为一脚本文件<code>sshb</code>，内容如下：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line">(cat &lt;&lt;EOF</span><br><span class="line">-----BEGIN RSA PRIVATE KEY-----</span><br><span class="line">**跳板机上用户jump的私钥，该私钥公开使用**</span><br><span class="line">-----END RSA PRIVATE KEY-----</span><br><span class="line">EOF</span><br><span class="line">) &gt; /tmp/jump_rsa</span><br><span class="line">chmod 600 /tmp/jump_rsa</span><br><span class="line">ssh -o <span class="string">"StrictHostKeyChecking no"</span> -o ProxyCommand=<span class="string">"ssh -o 'StrictHostKeyChecking no' -i /tmp/jump_rsa -W %h:%p -p 22 jump@10.0.4.105"</span> $*</span><br><span class="line">rm /tmp/jump_rsa</span><br></pre></td></tr></table></figure></p>
 <p>  之后即可通过 <code>./sshb S31</code>来登录虚拟机。<br>  <code>S31</code>为某台虚拟机的别称，该别称可以记录在本机的<code>.ssh/config</code>文件或<code>/etc/hosts</code>文件或者跳板机S2的<code>/etc/hosts</code>文件中。</p>
 
         </div>
