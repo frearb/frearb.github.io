@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>不系之舟</title><link href="https://blog.frearb.com/" rel="alternate"></link><link href="https://blog.frearb.com/feeds/all.atom.xml" rel="self"></link><id>https://blog.frearb.com/</id><updated>2019-03-12T15:14:57+08:00</updated><entry><title>利用ssh跳板功能登陆虚拟机集群</title><link href="https://blog.frearb.com/li-yong-sshtiao-ban-gong-neng-deng-lu-xu-ni-ji-ji-qun.html" rel="alternate"></link><published>2019-03-12T15:14:57+08:00</published><updated>2019-03-12T15:14:57+08:00</updated><author><name>frearb</name></author><id>tag:blog.frearb.com,2019-03-12:/li-yong-sshtiao-ban-gong-neng-deng-lu-xu-ni-ji-ji-qun.html</id><summary type="html">&lt;p&gt;&lt;img alt="图示" src="/images/computer.jpg"&gt;
+使用ssh命令提供的跳板功能，假设存在3台服务器S1、S2、S3，S1与S2可以互通，S2与S3可以互通，由于网络隔离S1与S3不能互通，此时可以在S1上将S2作为跳板登陆S3,命令 …&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;img alt="图示" src="/images/computer.jpg"&gt;
+使用ssh命令提供的跳板功能，假设存在3台服务器S1、S2、S3，S1与S2可以互通，S2与S3可以互通，由于网络隔离S1与S3不能互通，此时可以在S1上将S2作为跳板登陆S3,命令为：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ssh -J S2 S3
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;假设在S1上登陆S2、S3需要指定特定的用户名端口私钥，在上述命令中S2的私钥无法指定，可以通过修改config文件来指定或者使用&lt;code&gt;-J&lt;/code&gt;参数的展开形式：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ssh  -o &lt;span class="nv"&gt;ProxyCommand&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;ssh -i id_rsa2 -W %h:%p -p 22 jump@S2&amp;quot;&lt;/span&gt; S3 -p &lt;span class="m"&gt;22&lt;/span&gt; -i id_rsa3 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;假设S3不是一台服务器而是一个虚拟机集群，内部包含了虚拟机S31、S32、S33、S34、S35等若干台虚拟机，S2作为专用跳板供外部机器连接虚拟机。在S2上新建专用用户&lt;code&gt;jump&lt;/code&gt;，设置该用户通过密钥登录并且将默认shell改为&lt;code&gt;nologin&lt;/code&gt;以阻止常规登录，只允许作为跳板。&lt;/p&gt;
+&lt;p&gt;将上述命令封装为一脚本文件&lt;code&gt;sshb&lt;/code&gt;，内容如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="ch"&gt;#!/bin/bash&lt;/span&gt;
+&lt;span class="o"&gt;(&lt;/span&gt;cat &lt;span class="s"&gt;&amp;lt;&amp;lt;EOF&lt;/span&gt;
+&lt;span class="s"&gt;-----BEGIN RSA PRIVATE KEY-----&lt;/span&gt;
+&lt;span class="s"&gt;**跳板机上用户jump的私钥，该私钥公开使用**&lt;/span&gt;
+&lt;span class="s"&gt;-----END RSA PRIVATE KEY-----&lt;/span&gt;
+&lt;span class="s"&gt;EOF&lt;/span&gt;
+&lt;span class="o"&gt;)&lt;/span&gt; &amp;gt; /tmp/jump_rsa
+chmod &lt;span class="m"&gt;600&lt;/span&gt; /tmp/jump_rsa
+ssh -o &lt;span class="s2"&gt;&amp;quot;StrictHostKeyChecking no&amp;quot;&lt;/span&gt; -o &lt;span class="nv"&gt;ProxyCommand&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;ssh -o &amp;#39;StrictHostKeyChecking no&amp;#39; -i /tmp/jump_rsa -W %h:%p -p 22 jump@10.0.4.105&amp;quot;&lt;/span&gt; &lt;span class="nv"&gt;$*&lt;/span&gt;
+rm /tmp/jump_rsa
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;之后即可通过 &lt;code&gt;./sshb S31&lt;/code&gt;来登录虚拟机。
+  &lt;code&gt;S31&lt;/code&gt;为某台虚拟机的别称，该别称可以记录在本机的&lt;code&gt;.ssh/config&lt;/code&gt;文件或&lt;code&gt;/etc/hosts&lt;/code&gt;文件或者跳板机S2的&lt;code&gt;/etc/hosts&lt;/code&gt;文件中。&lt;/p&gt;</content><category term="misc"></category><category term="linux"></category></entry><entry><title>the-meaning-of-life</title><link href="https://blog.frearb.com/the-meaning-of-life.html" rel="alternate"></link><published>2019-03-04T16:25:46+08:00</published><updated>2019-03-04T16:25:46+08:00</updated><author><name>frearb</name></author><id>tag:blog.frearb.com,2019-03-04:/the-meaning-of-life.html</id><content type="html">&lt;p&gt;404&lt;/p&gt;</content><category term="misc"></category></entry><entry><title>demo</title><link href="https://blog.frearb.com/demo.html" rel="alternate"></link><published>2018-05-30T08:19:10+08:00</published><updated>2018-05-30T08:19:10+08:00</updated><author><name>frearb</name></author><id>tag:blog.frearb.com,2018-05-30:/demo.html</id><content type="html">&lt;p&gt;摘要&lt;/p&gt;
+&lt;!---more---&gt;
+&lt;p&gt;&lt;img alt="图示" src="/images/ruler.jpg"&gt;&lt;/p&gt;
+&lt;p&gt;这个嘛，测试&lt;/p&gt;</content><category term="misc"></category></entry></feed>
